@@ -30,7 +30,7 @@ SELECT
   timestamp AS event_time,
   temp_out AS outdoor_temperature,
   humidity AS outdoor_humidity,
-  bar AS barometric_pressure
+  dew_point AS dew_point
 FROM
   `manglaria-staging`.`manglaria_lakehouse_ds`.`davis_weather_combined`
 ```
