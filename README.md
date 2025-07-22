@@ -23,6 +23,16 @@ where $T_w$, $T$, and $H_r$ are wet-bulb temperature, temperature, and relative 
 - What is the average duration of periods above dangerous/lethal temperatures? Is this duration increasing?
 
 ## Attack plan
-- BigQuery `temperature`, `humidity` over designated timespan into csv
-- ERA5 historical data extraction
-- pandas filtering and analysis
+### BigQuery into csv
+```sql 
+SELECT
+  station_id AS station_id,
+  timestamp AS event_time,
+  temp_out AS outdoor_temperature,
+  humidity AS outdoor_humidity,
+  bar AS barometric_pressure
+FROM
+  `manglaria-staging`.`manglaria_lakehouse_ds`.`davis_weather_combined`
+```
+### ERA5 historical data extraction
+### Filtering and analysis
