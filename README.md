@@ -1,4 +1,4 @@
-# wetlightbulb
+# wetbulbasaur
 
 > A wet bulb is a thermometer in which the bulb is wrapped in a wet cloth. It can be used to measure the lowest temperature to which air can be cooled by evaporating water at constant pressure. Basically, it is a metaphor for human sweat and it will tell you how the human body would feel in direct sunlight.
 >
@@ -22,8 +22,8 @@ where $T_w$, $T$, and $H_r$ are wet-bulb temperature, temperature, and relative 
 - How many days of the year have a dangerous/lethal wetbulb temperature? (How has this changed over time?)
 - What is the average duration of periods above dangerous/lethal temperatures? Is this duration increasing?
 
-## Attack plan
-### BigQuery into csv
+## Usage
+### BigQuery from data lakehouse
 ```sql 
 SELECT
   station_id AS station_id,
@@ -32,7 +32,20 @@ SELECT
   humidity AS outdoor_humidity,
   dew_point AS dew_point
 FROM
-  `manglaria-staging`.`manglaria_lakehouse_ds`.`davis_weather_combined`
+  `manglaria`.`manglaria_lakehouse_ds`.`davis_weather_combined`
 ```
-### ERA5 historical data extraction
-### Filtering and analysis
+
+### Analysis and Plotting
+```
+python analysis.py [OPTIONS] [FILENAME]
+
+Options:
+  --plot   Plot the data for each station after analysis.
+  --write  Write wetbulb data to CSV file after analysis.
+  --help   Show this message and exit.
+```
+
+Dependencies:
+```
+pip install matplotlib pandas click numpy
+```

@@ -2,11 +2,10 @@ import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib import font_manager
+import click
 
 
-def calculate_wetbulb(
-    temp: np.ndarray, humidity: np.ndarray
-) -> np.ndarray:
+def calculate_wetbulb(temp: np.ndarray, humidity: np.ndarray) -> np.ndarray:
     """
     Calculates the wet bulb temperature.
     Parameters:
@@ -19,10 +18,10 @@ def calculate_wetbulb(
     if not (
         isinstance(temp, np.ndarray)
         and isinstance(humidity, np.ndarray)
-        #and isinstance(dew_point, np.ndarray)
+        # and isinstance(dew_point, np.ndarray)
     ):
         raise ValueError("Input parameters must be numpy arrays.")
-    if temp.shape != humidity.shape:# or temp.shape != dew_point.shape:
+    if temp.shape != humidity.shape:  # or temp.shape != dew_point.shape:
         raise ValueError("Input arrays must have the same shape.")
 
     Tw = (
@@ -45,10 +44,7 @@ def run_wetbulb_analysis(df: pd.DataFrame) -> pd.DataFrame:
     Returns:
         DataFrame: The DataFrame with an additional column for wet bulb temperature.
     """
-    if (
-        "outdoor_temperature" not in df.columns
-        or "outdoor_humidity" not in df.columns
-    ):
+    if "outdoor_temperature" not in df.columns or "outdoor_humidity" not in df.columns:
         raise ValueError(
             "DataFrame must contain 'outdoor_temperature', 'outdoor_humidity', and 'dew_point' columns."
         )
@@ -63,7 +59,7 @@ def run_wetbulb_analysis(df: pd.DataFrame) -> pd.DataFrame:
     df["wet_bulb"] = calculate_wetbulb(
         df["outdoor_temperature"].values,
         df["outdoor_humidity"].values,
-        #df["dew_point"].values,
+        # df["dew_point"].values,
     )
     return df
 
@@ -85,8 +81,7 @@ def plot_data(df, station_id) -> None:
         print(f"No data found for station ID: {station_id}")
         return
 
-
-    font_path = "WWF.otf"
+    font_path = "assets/WWF.otf"
     font_manager.fontManager.addfont(font_path)
     prop = font_manager.FontProperties(fname=font_path)
 
@@ -94,13 +89,16 @@ def plot_data(df, station_id) -> None:
     plt.rcParams["font.sans-serif"] = prop.get_name()
 
     plt.figure(figsize=(10, 5))
-    plt.style.use('https://github.com/dhaitz/matplotlib-stylesheets/raw/master/pitayasmoothie-light.mplstyle')
+    plt.style.use("assets/pitayasmoothie-light.mplstyle")
     plt.rcParams.update({"font.family": "Segoe UI", "font.size": 10})
-    plt.axhline(y=30,  linewidth=1, linestyle="--")
-    plt.axhline(y=35,  linewidth=1, linestyle="--")
+    plt.axhline(y=30, linewidth=1, linestyle="--")
+    plt.axhline(y=35, linewidth=1, linestyle="--")
 
     station_data["event_time"] = pd.to_datetime(
-        station_data["event_time"], utc=True, yearfirst=True, format="%Y-%m-%d %H:%M:%S UTC"
+        station_data["event_time"],
+        utc=True,
+        yearfirst=True,
+        format="%Y-%m-%d %H:%M:%S UTC",
     )
     station_data = station_data.sort_values(by="event_time")
 
@@ -129,18 +127,14 @@ def plot_data(df, station_id) -> None:
         daily_stats["wet_bulb_mean"],
         label="Wet Bulb Mean",
         linewidth=1,
-        #   color="#0081a7",
     )
     plt.fill_between(
         daily_stats["event_time"],
         daily_stats["wet_bulb_min"],
         daily_stats["wet_bulb_max"],
-        #color="#00afb9",
         alpha=0.3,
     )
 
-    #plt.scatter(times, station_data["wet_bulb"])
-    print(f"Station {station_id}: {len(station_data)}")
     plt.title(f"Station {station_id}".upper(), fontfamily=prop.get_name(), fontsize=20)
     plt.xlabel("Timestamp")
     plt.ylabel("Wet Bulb Temperature (°C)")
@@ -181,14 +175,36 @@ def plot_datas(df) -> None:
     plt.show()
 
 
-if __name__ == "__main__":
-    DATA_FILE = "data_full.csv"
+@click.command()
+@click.argument("file", type=click.Path(exists=True), default="data_full.csv")
+@click.option(
+    "--plot",
+    is_flag=True,
+    help="Plot the data for each station after analysis.",
+    default=True,
+)
+@click.option(
+    "--write",
+    is_flag=True,
+    help="Write wetbulb data to CSV file after analysis.",
+    default=True,
+)
+def main(file, plot, write):
+    DATA_FILE = file
     df = pd.read_csv(DATA_FILE)
     df = run_wetbulb_analysis(df)
-    print(max(df["wet_bulb"]))
-    print(df["station_id"].nunique())  # Print the number of unique stations
-    # number of unique stations
-    for station_id in df["station_id"].unique():
-        print(f"Station {station_id}: {len(df[df['station_id'] == station_id])} records")
-        plot_data(df, station_id)
-    #plot_datas(df)
+    if plot:
+        print("Highest wetbulb temperature recorded:", max(df["wet_bulb"]))
+        for station_id in df["station_id"].unique():
+            print(
+                f"Station {station_id}: {len(df[df['station_id'] == station_id])} records"
+            )
+            plot_data(df, station_id)
+    if write:
+        df.to_csv("wetbulb_data.csv", index=False)
+        print("Wet bulb data written to 'wetbulb_data.csv'.")
+    # plot_datas(df)
+
+
+if __name__ == "__main__":
+    main()
